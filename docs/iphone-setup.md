@@ -15,7 +15,7 @@ Mobile git can't use SSH, so it needs a token over HTTPS. Use a **fine-grained**
 5. **Expiration date**: up to 365 days (blank means 365). Set a reminder to renew it; sync stops when it expires.
 6. **Group and project access**: limit it to specific projects and select `<your-vault-repo>`.
 7. **Add resource permissions**, **Group and project** tab: select the **Code** resource, then tick **Download** (clone/pull) and **Push**. Nothing else is needed.
-8. Add all permissions before generating; plan on making a new token rather than editing this one.
+8. Before generating, check that both **Download** and **Push** are ticked. You may not be able to change a token's permissions after it's created; if one is missing later, delete the token and make a new one.
 9. Select **Generate token** and copy it right away. It's shown only once.
 
 If fine-grained tokens aren't available to you, choose **Legacy token** instead with only the `read_repository` and `write_repository` scopes and a short expiry. Note that a legacy token works for every repo your account can access.
