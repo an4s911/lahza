@@ -26,10 +26,11 @@ index.md
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/plugins/*/data.json
+.obsidian/app.json
 .trash/
 ```
 
-Indexes are rebuilt on each device, so keeping them out of git avoids sync conflicts.
+Indexes are rebuilt on each device, so keeping them out of git avoids sync conflicts. Ignoring `app.json` keeps editor settings per device, e.g. vim mode on desktop but not on a phone.
 
 ## Development
 

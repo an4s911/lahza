@@ -50,4 +50,4 @@ The plugin files come with the vault, but its settings don't sync (they hold the
 
 - Avoid editing the same note on the laptop and the phone at the same time; sync first.
 - If a pull reports a conflict, open **Git: Open source control view** to see which file, fix it, then commit-and-sync.
-- Vim mode is shared with the desktop settings. If it gets in the way on the phone's touch keyboard, turn it off under **Settings → Editor**; that changes it everywhere, so you may prefer to leave it on and type in insert mode.
+- Editor settings such as vim mode live in `.obsidian/app.json`. Keep that file out of git (see the README's `.gitignore`) so the desktop can use vim mode while the phone doesn't.
