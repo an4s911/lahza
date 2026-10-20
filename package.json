@@ -1,0 +1,21 @@
+{
+  "name": "notes-system",
+  "version": "0.1.0",
+  "description": "Minimal Obsidian notes workflow: dated notes, inbox filing, auto titles and folder indexes.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "test": "node --test test/*.test.ts",
+    "deploy": "node scripts/deploy.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "builtin-modules": "^5.4.0",
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.14.4",
+    "typescript": "^7.0.2"
+  }
+}
