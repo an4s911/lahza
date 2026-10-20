@@ -1,0 +1,32 @@
+/* In-note math */
+.ns-calc-var {
+	color: var(--text-accent);
+}
+
+.ns-calc-result {
+	color: var(--color-green);
+	font-weight: var(--font-semibold);
+}
+
+.ns-calc-ghost {
+	color: var(--text-faint);
+	pointer-events: none;
+}
+
+.ns-calc-error {
+	text-decoration: underline wavy var(--text-error);
+	text-decoration-skip-ink: none;
+	text-underline-offset: 3px;
+}
+
+.ns-calc-hint {
+	text-decoration: underline dotted var(--color-blue);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
+}
+
+.ns-calc-tooltip {
+	padding: var(--size-4-1) var(--size-4-2);
+	font-size: var(--font-ui-small);
+	max-width: 22em;
+}

@@ -1,4 +1,6 @@
+import type { Extension } from "@codemirror/state";
 import { MarkdownView, Notice, Platform, Plugin, TAbstractFile, TFile, TFolder, setIcon } from "obsidian";
+import { calcExtension } from "./calcEditor.ts";
 import { describeDecision, stripFrontmatter } from "./content.ts";
 import { CREATED, MODIFIED, newNoteContent, noteDates } from "./dates.ts";
 import { type FolderNode, type NoteEntry, renderIndex, sortNotes } from "./indexer.ts";
@@ -43,10 +45,14 @@ export default class NotesSystemPlugin extends Plugin {
 	private filing = false;
 	private warnedNoKey = false;
 	private vimMapped: string[] = [];
+	/** Editor extensions for math; emptied when math is off. */
+	private mathExtensions: Extension[] = [];
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new NotesSettingTab(this.app, this));
+		this.registerEditorExtension(this.mathExtensions);
+		this.applyMathResults();
 
 		this.addCommand({
 			id: "new-note-here",
@@ -187,6 +193,21 @@ export default class NotesSystemPlugin extends Plugin {
 			}
 		}
 		this.vimMapped = [];
+	}
+
+	// ---- Math --------------------------------------------------------------
+
+	applyMathResults(): void {
+		this.mathExtensions.length = 0;
+		if (this.settings.mathResults !== "off") {
+			this.mathExtensions.push(
+				calcExtension({
+					insert: () => this.settings.mathResults === "insert",
+					cursorTooltips: Platform.isMobile,
+				}),
+			);
+		}
+		this.app.workspace.updateOptions();
 	}
 
 	// ---- Creating notes --------------------------------------------------

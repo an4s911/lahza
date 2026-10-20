@@ -9,7 +9,10 @@ export interface NotesSettings {
 	autoDescribe: boolean;
 	minLength: number;
 	vimEscape: string;
+	mathResults: MathResults;
 }
+
+export type MathResults = "suggest" | "insert" | "off";
 
 export const DEFAULT_SETTINGS: NotesSettings = {
 	apiKey: "",
@@ -19,6 +22,7 @@ export const DEFAULT_SETTINGS: NotesSettings = {
 	autoDescribe: true,
 	minLength: 80,
 	vimEscape: "jk, kj",
+	mathResults: "suggest",
 };
 
 export class NotesSettingTab extends PluginSettingTab {
@@ -124,6 +128,24 @@ export class NotesSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 					this.plugin.applyVimEscape();
 				}),
+			);
+
+		new Setting(containerEl).setName("Math").setHeading();
+
+		new Setting(containerEl)
+			.setName("Math results")
+			.setDesc(
+				"Lines like \"rent = 1200\" set variables; ending a line with \"=\" gives the answer. Suggest shows it in grey (Enter or Tab inserts it); Insert adds it right away. Results update when variables change.",
+			)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOptions({ suggest: "Suggest", insert: "Insert", off: "Off" })
+					.setValue(settings.mathResults)
+					.onChange(async (value) => {
+						settings.mathResults = value as MathResults;
+						await this.plugin.saveSettings();
+						this.plugin.applyMathResults();
+					}),
 			);
 	}
 }
