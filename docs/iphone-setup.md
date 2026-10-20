@@ -11,7 +11,7 @@ Mobile git can't use SSH, so it needs a token over HTTPS. Use a **fine-grained**
 1. On gitlab.com select your **avatar** (upper-right) → **Edit profile**.
 2. In the left sidebar select **Access** → **Personal access tokens**.
 3. From the **Generate token** dropdown select **Fine-grained token**.
-4. **Name**: e.g. `obsidian-iphone`. **Description**: optional.
+4. **Name**: e.g. `obsidian-iphone`. **Description** (required): e.g. `Obsidian Git sync on iPhone`.
 5. **Expiration date**: up to 365 days (blank means 365). Set a reminder to renew it; sync stops when it expires.
 6. **Group and project access**: limit it to specific projects and select `<your-vault-repo>`.
 7. **Add resource permissions**, **Group and project** tab: select the **Code** resource, then tick **Download** (clone/pull) and **Push**. Nothing else is needed.
