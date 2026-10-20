@@ -1,6 +1,6 @@
 // In-note math in the editor: colors variables and results, shows the answer
 // after a trailing "=" (Enter or Tab inserts it), keeps results current as
-// variables change, and explains values, errors and hints in tooltips.
+// variables change, and shows values and errors in tooltips.
 
 import { Annotation, EditorState, type Extension, Prec, type Range, StateField } from "@codemirror/state";
 import {
@@ -10,6 +10,7 @@ import {
 	keymap,
 	showTooltip,
 	type Tooltip,
+	type TooltipView,
 	WidgetType,
 } from "@codemirror/view";
 import { formatNumber, type Span } from "./calc.ts";
@@ -58,7 +59,6 @@ const mark = (cls: string) => Decoration.mark({ class: cls });
 const VAR = mark("ns-calc-var");
 const RESULT = mark("ns-calc-result");
 const ERROR = mark("ns-calc-error");
-const HINT = mark("ns-calc-hint");
 
 function decorations(insert: () => boolean) {
 	return EditorView.decorations.compute([calcField, "selection"], (state) => {
@@ -69,7 +69,6 @@ function decorations(insert: () => boolean) {
 		};
 		add(calc.vars, VAR);
 		add(calc.results, RESULT);
-		add(calc.hints, HINT);
 		add(calc.errors, ERROR);
 		if (!insert()) {
 			const line = state.doc.lineAt(state.selection.main.head);
@@ -145,24 +144,24 @@ function describeAt(calc: NoteCalc, pos: number, inclusive: boolean): { span: Sp
 		span = span ? { from: Math.min(span.from, s.from), to: Math.max(span.to, s.to) } : s;
 	};
 	for (const e of calc.errors) if (hit(e)) take(e, e.message);
-	for (const h of calc.hints) if (hit(h)) take(h, h.message);
 	for (const v of calc.vars) {
 		if (hit(v) && !lines.length) take(v, v.value === undefined ? `${v.name}: no value` : `${v.name} = ${formatNumber(v.value)}`);
 	}
 	return span ? { span, lines } : null;
 }
 
-function tooltipDom(lines: string[]): HTMLElement {
+function tooltipView(lines: string[]): TooltipView {
 	const dom = document.createElement("div");
 	dom.className = "ns-calc-tooltip";
 	for (const line of lines) dom.createDiv({ text: line });
-	return dom;
+	// CodeMirror's tooltip box defaults to a light background; mark it so styles.css can theme it.
+	return { dom, mount: () => dom.closest(".cm-tooltip")?.classList.add("ns-calc-tooltip-box") };
 }
 
 const hover = hoverTooltip((view, pos) => {
 	const found = describeAt(view.state.field(calcField), pos, true);
 	if (!found) return null;
-	return { pos: found.span.from, end: found.span.to, above: true, create: () => ({ dom: tooltipDom(found.lines) }) };
+	return { pos: found.span.from, end: found.span.to, above: true, create: () => tooltipView(found.lines) };
 });
 
 const cursorTooltip = showTooltip.compute([calcField, "selection"], (state): Tooltip | null => {
@@ -170,7 +169,7 @@ const cursorTooltip = showTooltip.compute([calcField, "selection"], (state): Too
 	if (!sel.empty) return null;
 	const found = describeAt(state.field(calcField), sel.head, false);
 	if (!found) return null;
-	return { pos: found.span.from, above: true, create: () => ({ dom: tooltipDom(found.lines) }) };
+	return { pos: found.span.from, above: true, create: () => tooltipView(found.lines) };
 });
 
 export function calcExtension(options: CalcOptions): Extension {

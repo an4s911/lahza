@@ -32,7 +32,7 @@ monthly =  1,650
 - **Live results.** Change a variable and every result that uses it is rewritten, in the same undo step. Results are plain text in the note, so they show in reading view, search and git. Text after a result, like `= 452.14 USD`, is kept.
 - **Shown values.** Once a variable is set, `name = 1,300` on a later line shows its current value rather than setting it again. To change a variable further down, use an expression such as `saving = saving + 100`.
 - **Operators.** `+ - * /` (also `× ÷` and `x` between values, as in `230 x 26`), `^`, parentheses, `1,200` grouping, `sqrt abs round min max` (`round(x, 2)`; put a space after commas in functions) and `pi`.
-- **Percent is strict.** `15%` is `0.15`: `15% of 200` is `30`, `200 + 15% of 200` is `230`, and `200 + 15%` is `200.15`, with a dotted hint asking whether you meant `15% of 200`.
+- **Percent is strict.** `15%` is `0.15`: `15% of 200` is `30`, `200 + 15% of 200` is `230`, and `200 + 15%` is `200.15`.
 - **Colors and tooltips.** Variables and results are colored; errors get a red wavy underline. Hover (or put the cursor on it, on mobile) to see a variable's value or what's wrong.
 - **Rounding.** Answers show up to 2 decimals.
 

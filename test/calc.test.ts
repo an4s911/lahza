@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { CalcError, evaluate, formatNumber, parseExpression, percentHints } from "../src/calc.ts";
+import { CalcError, evaluate, formatNumber, parseExpression } from "../src/calc.ts";
 
 const calc = (src: string, vars: Record<string, number> = {}) =>
 	evaluate(parseExpression(src), (name, span) => {
@@ -70,18 +70,6 @@ test("errors point at the problem", () => {
 	assert.equal(err("sqrt(1, 2)").message, "sqrt takes 1 value");
 	assert.equal(err("sqrt(-1)").message, "No real result");
 	assert.equal(err("1 & 2").message, 'Can\'t read "&"');
-});
-
-test("hints when a percent is added or taken away", () => {
-	const src = "200 + 15%";
-	const [hint] = percentHints(parseExpression(src), src);
-	assert.equal(src.slice(hint.from, hint.to), "15%");
-	assert.equal(hint.message, "15% here means 0.15. Did you mean 15% of 200?");
-	const src2 = "a + b - 7.5%";
-	assert.equal(percentHints(parseExpression(src2), src2)[0].message, "7.5% here means 0.075. Did you mean 7.5% of (a + b)?");
-	for (const ok of ["15% of 200", "200 * 115%", "200 + 15% of 200", "10% + 5%"]) {
-		assert.deepEqual(percentHints(parseExpression(ok), ok), [], ok);
-	}
 });
 
 test("formats with 2 decimals and grouping", () => {

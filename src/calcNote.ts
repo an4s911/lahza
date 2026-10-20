@@ -1,5 +1,5 @@
 // Finds the math in a note, top to bottom: variables, results to keep up to
-// date, "=" waiting for an answer, errors and hints. Offsets are into the
+// date, "=" waiting for an answer, and errors. Offsets are into the
 // whole note text.
 
 import {
@@ -10,7 +10,6 @@ import {
 	NAME,
 	type Node,
 	parseExpression,
-	percentHints,
 	RESERVED,
 	type Span,
 	variables,
@@ -45,7 +44,6 @@ export interface NoteCalc {
 	results: Span[];
 	queries: Query[];
 	errors: Message[];
-	hints: Message[];
 	/** Results that are out of date. */
 	edits: Edit[];
 }
@@ -65,7 +63,7 @@ interface Segment {
 }
 
 export function analyzeNote(text: string): NoteCalc {
-	const out: NoteCalc = { vars: [], results: [], queries: [], errors: [], hints: [], edits: [] };
+	const out: NoteCalc = { vars: [], results: [], queries: [], errors: [], edits: [] };
 	const lines = mathLines(text);
 	const declaredAt = new Map<string, number>();
 	lines.forEach((segments, i) => {
@@ -235,7 +233,7 @@ function tryParse(segment: Segment, env: Map<string, number>): { node: Node } | 
 	}
 }
 
-/** Evaluates, recording variables, hints and errors. Null on error. */
+/** Evaluates, recording variables and errors. Null on error. */
 function run(
 	parsed: { node: Node } | { error: CalcError },
 	segment: Segment,
@@ -257,7 +255,6 @@ function run(
 		}
 		out.vars.push({ ...abs(v), name: v.name, value });
 	}
-	for (const hint of percentHints(node, segment.text)) out.hints.push({ ...abs(hint), message: hint.message });
 	try {
 		return evaluate(node, lookup);
 	} catch (e) {

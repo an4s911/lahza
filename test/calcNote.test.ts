@@ -141,14 +141,13 @@ test("prose, code and properties are left alone", () => {
 		"",
 	].join("\n");
 	const calc = analyzeNote(text);
-	assert.deepEqual(calc, { vars: [], results: [], queries: [], errors: [], hints: [], edits: [] });
+	assert.deepEqual(calc, { vars: [], results: [], queries: [], errors: [], edits: [] });
 });
 
-test("reserved names and percent hints", () => {
+test("reserved names, and strict percent", () => {
 	const text = "x = 5\nprice = 200 + 15%\n";
 	const calc = analyzeNote(text);
 	assert.deepEqual(calc.errors.map((e) => [at(text, e), e.message]), [["x", '"x" means multiply; pick another name']]);
-	assert.deepEqual(calc.hints.map((h) => at(text, h)), ["15%"]);
 	assert.equal(calc.vars.find((v) => v.name === "price")?.value, 200.15);
 });
 

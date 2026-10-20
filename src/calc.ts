@@ -288,35 +288,6 @@ export function variables(node: Node): (Node & { kind: "var" })[] {
 	}
 }
 
-/** "a + b%" and "a - b%": strict math gives a + b/100, which may not be what was meant. */
-export function percentHints(node: Node, src: string): (Span & { message: string })[] {
-	const hints: (Span & { message: string })[] = [];
-	const walk = (n: Node) => {
-		if (n.kind === "bin") {
-			if ((n.op === "+" || n.op === "-") && n.right.kind === "percent" && n.left.kind !== "percent") {
-				const pct = src.slice(n.right.from, n.right.to).trim();
-				const base = src.slice(n.left.from, n.left.to).trim();
-				const value =
-					n.right.arg.kind === "num" ? String(Number((n.right.arg.value / 100).toPrecision(12))) : `${pct.replace(/%$/, "")} ÷ 100`;
-				hints.push({
-					from: n.right.from,
-					to: n.right.to,
-					message: `${pct} here means ${value}. Did you mean ${pct} of ${needsParens(n.left) ? `(${base})` : base}?`,
-				});
-			}
-			walk(n.left);
-			walk(n.right);
-		} else if (n.kind === "percent" || n.kind === "neg") walk(n.arg);
-		else if (n.kind === "call") n.args.forEach(walk);
-	};
-	walk(node);
-	return hints;
-}
-
-function needsParens(node: Node): boolean {
-	return node.kind === "bin" && node.op !== "^" && node.op !== "of";
-}
-
 /** Rounds to 2 decimals with grouping commas: 1,300 · 808.08 · -0.5. Tiny values keep 2 significant digits. */
 export function formatNumber(value: number): string {
 	if (Object.is(value, -0)) value = 0;
