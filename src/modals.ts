@@ -1,4 +1,59 @@
 import { type App, FuzzySuggestModal, Modal, Setting, SuggestModal } from "obsidian";
+import { type FolderOption, folderOptions } from "./folders.ts";
+
+class NewNoteFolderModal extends SuggestModal<FolderOption> {
+	private chosen = false;
+	private folders: string[];
+	private inbox: string;
+	private current: string | null;
+	private resolve: (folder: string | null) => void;
+
+	constructor(
+		app: App,
+		folders: string[],
+		inbox: string,
+		current: string | null,
+		resolve: (folder: string | null) => void,
+	) {
+		super(app);
+		this.folders = folders;
+		this.inbox = inbox;
+		this.current = current;
+		this.resolve = resolve;
+		this.setPlaceholder("New note in… (Enter for inbox, or type a new folder path)");
+	}
+
+	getSuggestions(query: string): FolderOption[] {
+		return folderOptions(this.folders, this.inbox, this.current, query);
+	}
+
+	renderSuggestion(option: FolderOption, el: HTMLElement): void {
+		el.createDiv({ text: option.create && option.folder !== this.inbox ? `Create folder: ${option.folder}` : option.folder });
+		if (option.folder === this.inbox) el.createEl("small", { text: "default", cls: "mod-muted" });
+		else if (option.folder === this.current) el.createEl("small", { text: "current folder", cls: "mod-muted" });
+	}
+
+	onChooseSuggestion(option: FolderOption): void {
+		this.chosen = true;
+		this.resolve(option.folder);
+	}
+
+	onClose(): void {
+		window.setTimeout(() => {
+			if (!this.chosen) this.resolve(null);
+		}, 0);
+	}
+}
+
+/** Asks where a new note goes. Resolves null when cancelled. */
+export function askNewNoteFolder(
+	app: App,
+	folders: string[],
+	inbox: string,
+	current: string | null,
+): Promise<string | null> {
+	return new Promise((resolve) => new NewNoteFolderModal(app, folders, inbox, current, resolve).open());
+}
 
 export type FileChoice =
 	| { kind: "move"; folder: string; reason: string }

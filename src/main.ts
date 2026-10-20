@@ -1,7 +1,7 @@
 import { Notice, Plugin, TAbstractFile, TFile, TFolder } from "obsidian";
 import { describeDecision, stripFrontmatter } from "./content.ts";
 import { type FolderNode, type NoteEntry, renderIndex } from "./indexer.ts";
-import { askFileChoice, confirmNewFolder, type FileChoice, pickFolder } from "./modals.ts";
+import { askFileChoice, askNewNoteFolder, confirmNewFolder, type FileChoice, pickFolder } from "./modals.ts";
 import {
 	datePrefix,
 	displayTitle,
@@ -54,8 +54,8 @@ export default class NotesSystemPlugin extends Plugin {
 
 		this.addCommand({
 			id: "new-note-here",
-			name: "New dated note in current folder",
-			callback: () => this.newNoteIn(this.currentFolder()),
+			name: "New dated note (choose folder)",
+			callback: () => this.newNoteWithPicker(),
 		});
 		this.addCommand({
 			id: "quick-capture",
@@ -172,12 +172,37 @@ export default class NotesSystemPlugin extends Plugin {
 
 	// ---- Creating notes --------------------------------------------------
 
-	private currentFolder(): TFolder {
-		return this.app.workspace.getActiveFile()?.parent ?? this.app.vault.getRoot();
+	private async newNoteWithPicker(): Promise<void> {
+		const parent = this.app.workspace.getActiveFile()?.parent;
+		const current = parent && !parent.isRoot() ? parent.path : null;
+		const folder = await askNewNoteFolder(
+			this.app,
+			this.allFolderPaths(),
+			this.settings.inboxFolder,
+			current,
+		);
+		if (folder === null) return;
+		await this.ensureFolder(folder);
+		await this.createAndOpen(folder, formatDate(new Date()));
 	}
 
 	private async newNoteIn(folder: TFolder): Promise<void> {
 		await this.createAndOpen(this.folderPath(folder), formatDate(new Date()));
+	}
+
+	/** Every non-hidden folder except the vault root. */
+	private allFolderPaths(): string[] {
+		const paths: string[] = [];
+		const walk = (folder: TFolder) => {
+			for (const child of folder.children) {
+				if (child instanceof TFolder && !child.name.startsWith(".")) {
+					paths.push(child.path);
+					walk(child);
+				}
+			}
+		};
+		walk(this.app.vault.getRoot());
+		return paths;
 	}
 
 	private async quickCapture(): Promise<void> {
