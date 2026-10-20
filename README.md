@@ -2,15 +2,16 @@
 
 # Notes System
 
-A small Obsidian plugin for a simple notes workflow: plain markdown notes in folders, named by date, with a cheap AI model doing the boring parts.
+A small Obsidian plugin for a simple notes workflow: plain markdown notes in folders, with created/modified dates as properties and a cheap AI model doing the boring parts.
 
 ## What it does
 
-- **Dated notes.** "New dated note in current folder" creates `YYYY-MM-DD.md` next to the note you're in (or right-click a folder → *New dated note*). A second note on the same day becomes `YYYY-MM-DD 2.md`.
-- **Quick capture.** "Quick capture to inbox" creates `inbox/YYYY-MM-DD HHmm.md` for a thought you'll sort later. Also on the ribbon, so it works on mobile.
-- **Automatic title and description.** When you leave a note, the plugin asks the model for a short title and a one-line description. The description goes into the note's `description` property; a date-only file name becomes `YYYY-MM-DD <title>.md`. Names you chose yourself are never changed and your text is never edited. It only calls the model again when the note changed a lot.
+- **New notes.** "New note (choose folder)" asks where the note goes (Enter picks the inbox; type a path to make a new folder) and creates `Untitled.md` there (`Untitled 2.md` if that's taken). Also on the new tab page and in a folder's right-click menu.
+- **Quick capture.** "Quick capture to inbox" creates an Untitled note in `inbox/` for a thought you'll sort later. Also on the ribbon, so it works on mobile.
+- **Created and modified dates.** New notes get `created` and `modified` date & time properties (local time, `YYYY-MM-DDTHH:mm`). When you leave a note whose text changed, `modified` is set to now. They're properties rather than file times because git resets file times on every clone and pull.
+- **Automatic title and description.** When you leave a note, the plugin asks the model for a short title and a one-line description. The description goes into the note's `description` property and an Untitled note is renamed to the title. Names you chose yourself are never changed and your text is never edited. It only calls the model again when the note changed a lot.
 - **File inbox.** "File inbox notes" goes through the inbox one note at a time. The model sees the note, your folder list and a few recent notes per folder, and suggests up to three folders (or a new one). Nothing moves until you pick.
-- **Folder indexes.** Every folder gets a generated `index.md`: subfolders first, then notes newest first with their descriptions. The root index also lists recent notes from everywhere. No AI involved; they update as you work.
+- **Folder indexes.** Every folder gets a generated `index.md`: subfolders first, then notes by created date, newest first, with their descriptions. The root index also lists the most recently edited notes from everywhere. No AI involved; they update as you work.
 - **Vim escape.** Maps `jk` / `kj` (configurable) to `<Esc>` in Obsidian's vim mode.
 
 ## Privacy and cost

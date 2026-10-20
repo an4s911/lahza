@@ -1,6 +1,6 @@
 {
   "name": "notes-system",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Minimal Obsidian notes workflow: dated notes, inbox filing, auto titles and folder indexes.",
   "private": true,
   "type": "module",

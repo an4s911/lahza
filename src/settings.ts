@@ -65,7 +65,7 @@ export class NotesSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Auto title and description")
-			.setDesc("When you leave a note, add a description and replace a date-only name with a title.")
+			.setDesc("When you leave a note, add a description and rename an Untitled note to its title.")
 			.addToggle((toggle) =>
 				toggle.setValue(settings.autoDescribe).onChange(async (value) => {
 					settings.autoDescribe = value;

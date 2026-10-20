@@ -1,16 +1,9 @@
-import { Notice, Platform, Plugin, TAbstractFile, TFile, TFolder, setIcon } from "obsidian";
+import { MarkdownView, Notice, Platform, Plugin, TAbstractFile, TFile, TFolder, setIcon } from "obsidian";
 import { describeDecision, stripFrontmatter } from "./content.ts";
-import { type FolderNode, type NoteEntry, renderIndex } from "./indexer.ts";
+import { CREATED, MODIFIED, newNoteContent, noteDates } from "./dates.ts";
+import { type FolderNode, type NoteEntry, renderIndex, sortNotes } from "./indexer.ts";
 import { askFileChoice, askNewNoteFolder, confirmNewFolder, type FileChoice, pickFolder } from "./modals.ts";
-import {
-	datePrefix,
-	displayTitle,
-	formatDate,
-	formatTime,
-	isUntitled,
-	titledBasename,
-	uniqueBasename,
-} from "./naming.ts";
+import { cleanTitle, formatDateTime, isUntitled, nameTaken, UNTITLED_NAME, uniqueBasename } from "./naming.ts";
 import { AiError, chat } from "./openrouter.ts";
 import {
 	cleanFolderPath,
@@ -41,6 +34,8 @@ export default class NotesSystemPlugin extends Plugin {
 	settings: NotesSettings = { ...DEFAULT_SETTINGS };
 	private described: Record<string, number> = {};
 	private currentPath: string | null = null;
+	/** Note body when it was opened, to tell whether it changed by the time it's left. */
+	private openedBodies = new Map<string, string>();
 	private inFlight = new Set<string>();
 	private indexTimer: number | undefined;
 	private rebuilding = false;
@@ -55,7 +50,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 		this.addCommand({
 			id: "new-note-here",
-			name: "New dated note (choose folder)",
+			name: "New note (choose folder)",
 			callback: () => this.newNoteWithPicker(),
 		});
 		this.addCommand({
@@ -94,8 +89,8 @@ export default class NotesSystemPlugin extends Plugin {
 				if (!(file instanceof TFolder)) return;
 				menu.addItem((item) =>
 					item
-						.setTitle("New dated note")
-						.setIcon("calendar-plus")
+						.setTitle("New note")
+						.setIcon("file-plus")
 						.onClick(() => this.newNoteIn(file)),
 				);
 			}),
@@ -103,13 +98,16 @@ export default class NotesSystemPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(() => {
 			this.applyVimEscape();
-			this.currentPath = this.app.workspace.getActiveFile()?.path ?? null;
+			const active = this.app.workspace.getActiveFile();
+			this.currentPath = active?.path ?? null;
+			if (active) void this.rememberBody(active);
 
 			this.registerEvent(this.app.workspace.on("file-open", (file) => this.onFileOpen(file)));
 			this.registerEvent(this.app.vault.on("create", (f) => this.onVaultChange(f)));
 			this.registerEvent(
 				this.app.vault.on("delete", (f) => {
 					delete this.described[f.path];
+					this.openedBodies.delete(f.path);
 					this.onVaultChange(f);
 				}),
 			);
@@ -121,11 +119,28 @@ export default class NotesSystemPlugin extends Plugin {
 						void this.saveSettings();
 					}
 					if (this.currentPath === oldPath) this.currentPath = f.path;
+					const opened = this.openedBodies.get(oldPath);
+					if (opened !== undefined) {
+						this.openedBodies.delete(oldPath);
+						this.openedBodies.set(f.path, opened);
+					}
 					this.onVaultChange(f);
 				}),
 			);
 			this.registerEvent(this.app.metadataCache.on("changed", (f) => this.onVaultChange(f)));
 			this.registerEvent(this.app.workspace.on("layout-change", () => this.decorateEmptyTabs()));
+			// Desktop only waits for these; on mobile the app can be closed without notice.
+			this.registerEvent(
+				this.app.workspace.on("quit", (tasks) => {
+					const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+					const file = view?.file;
+					if (!view || !file) return;
+					tasks.add(async () => {
+						await view.save(); // so the latest typing is on disk before the properties change
+						await this.stampModified(file);
+					});
+				}),
+			);
 
 			this.decorateEmptyTabs();
 			this.scheduleIndexRebuild();
@@ -176,7 +191,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 	// ---- Creating notes --------------------------------------------------
 
-	/** Adds "New dated note" to the top of the actions on every empty (new) tab. */
+	/** Adds "New note" to the top of the actions on every empty (new) tab. */
 	private decorateEmptyTabs(): void {
 		// The empty view fills its action list when it opens, so wait a tick.
 		window.setTimeout(() => {
@@ -189,8 +204,8 @@ export default class NotesSystemPlugin extends Plugin {
 					cls: ["text-icon-button", "tappable", "mod-pill", "empty-state-action", EMPTY_TAB_ACTION],
 					attr: { tabIndex: 0, role: "button" },
 				});
-				setIcon(button.createSpan("text-button-icon"), "calendar-plus");
-				button.createSpan({ cls: "text-button-label", text: "New dated note" });
+				setIcon(button.createSpan("text-button-icon"), "file-plus");
+				button.createSpan({ cls: "text-button-label", text: "New note" });
 				const hotkey = Platform.isDesktop
 					? (this.app as any).hotkeyManager?.printHotkeyForCommand?.(`${this.manifest.id}:new-note-here`)
 					: "";
@@ -219,11 +234,11 @@ export default class NotesSystemPlugin extends Plugin {
 		);
 		if (folder === null) return;
 		await this.ensureFolder(folder);
-		await this.createAndOpen(folder, formatDate(new Date()));
+		await this.createAndOpen(folder);
 	}
 
 	private async newNoteIn(folder: TFolder): Promise<void> {
-		await this.createAndOpen(this.folderPath(folder), formatDate(new Date()));
+		await this.createAndOpen(this.folderPath(folder));
 	}
 
 	/** Every non-hidden folder except the vault root. */
@@ -244,14 +259,45 @@ export default class NotesSystemPlugin extends Plugin {
 	private async quickCapture(): Promise<void> {
 		const inbox = this.settings.inboxFolder;
 		await this.ensureFolder(inbox);
-		const now = new Date();
-		await this.createAndOpen(inbox, `${formatDate(now)} ${formatTime(now)}`);
+		await this.createAndOpen(inbox);
 	}
 
-	private async createAndOpen(folder: string, base: string): Promise<void> {
-		const name = uniqueBasename(base, (n) => this.exists(this.notePath(folder, n)));
-		const file = await this.app.vault.create(this.notePath(folder, name), "");
-		await this.app.workspace.getLeaf(false).openFile(file);
+	/** Creates an Untitled note with created/modified properties and puts the cursor below them. */
+	private async createAndOpen(folder: string): Promise<void> {
+		const name = this.freeName(folder, UNTITLED_NAME);
+		const file = await this.app.vault.create(this.notePath(folder, name), newNoteContent(new Date()));
+		const leaf = this.app.workspace.getLeaf(false);
+		await leaf.openFile(file, { active: true });
+		if (leaf.view instanceof MarkdownView) {
+			const editor = leaf.view.editor;
+			editor.setCursor({ line: editor.lastLine(), ch: 0 });
+			editor.focus();
+		}
+	}
+
+	// ---- Modified dates -------------------------------------------------
+
+	private async rememberBody(file: TFile): Promise<void> {
+		if (!this.isNote(file) || this.openedBodies.has(file.path)) return;
+		this.openedBodies.set(file.path, this.body(await this.app.vault.read(file)));
+	}
+
+	/**
+	 * Sets `modified` to now if the body changed since the note was opened, and
+	 * fills in a missing `created` (e.g. a note made with Obsidian's own button).
+	 */
+	private async stampModified(file: TFile): Promise<void> {
+		const opened = this.openedBodies.get(file.path);
+		this.openedBodies.delete(file.path);
+		if (opened === undefined || !this.isNote(file)) return;
+		if (this.body(await this.app.vault.read(file)) === opened) return;
+
+		const now = formatDateTime(new Date());
+		const created = formatDateTime(new Date(file.stat.ctime));
+		await this.app.fileManager.processFrontMatter(file, (fm) => {
+			if (!fm[CREATED]) fm[CREATED] = created < now ? created : now;
+			fm[MODIFIED] = now;
+		});
 	}
 
 	// ---- Titles and descriptions ----------------------------------------
@@ -259,24 +305,27 @@ export default class NotesSystemPlugin extends Plugin {
 	private onFileOpen(file: TFile | null): void {
 		const previous = this.currentPath;
 		this.currentPath = file?.path ?? null;
-		if (!previous || previous === this.currentPath || !this.settings.autoDescribe) return;
+		if (file) void this.rememberBody(file);
+		if (!previous || previous === this.currentPath) return;
 
 		window.setTimeout(() => {
 			if (this.currentPath === previous) return; // came back to it
 			const left = this.app.vault.getAbstractFileByPath(previous);
-			if (left instanceof TFile) {
-				this.describe(left, false, true).catch((e) => this.reportError(e));
-			}
+			if (!(left instanceof TFile)) return;
+			void (async () => {
+				await this.stampModified(left);
+				if (this.settings.autoDescribe) await this.describe(left, false, true);
+			})().catch((e) => this.reportError(e));
 		}, LEAVE_DELAY_MS);
 	}
 
-	/** Adds a description and, for date-only names, a title. Returns the (possibly renamed) file. */
+	/** Adds a description and, for Untitled notes, a title. Returns the (possibly renamed) file. */
 	private async describe(file: TFile, force: boolean, quiet: boolean): Promise<TFile> {
-		if (file.extension !== "md" || this.isIndexFile(file) || this.inFlight.has(file.path)) {
+		if (!this.isNote(file) || this.inFlight.has(file.path)) {
 			return file;
 		}
 
-		const body = stripFrontmatter(await this.app.vault.read(file)).trim();
+		const body = this.body(await this.app.vault.read(file));
 		const description = this.app.metadataCache.getFileCache(file)?.frontmatter?.description;
 		const untitled = isUntitled(file.basename);
 		const decision = force
@@ -336,11 +385,10 @@ export default class NotesSystemPlugin extends Plugin {
 	}
 
 	private async renameWithTitle(file: TFile, title: string): Promise<void> {
-		const date = datePrefix(file.basename) ?? formatDate(new Date(file.stat.ctime));
-		const base = titledBasename(date, title);
-		if (base === file.basename) return;
+		const base = cleanTitle(title);
+		if (!base || base === file.basename) return;
 		const folder = this.folderPath(file.parent ?? this.app.vault.getRoot());
-		const name = uniqueBasename(base, (n) => this.exists(this.notePath(folder, n)));
+		const name = this.freeName(folder, base, file);
 		await this.app.fileManager.renameFile(file, this.notePath(folder, name));
 	}
 
@@ -353,9 +401,7 @@ export default class NotesSystemPlugin extends Plugin {
 			const inbox = this.app.vault.getAbstractFileByPath(this.settings.inboxFolder);
 			const notes =
 				inbox instanceof TFolder
-					? inbox.children.filter(
-							(f): f is TFile => f instanceof TFile && f.extension === "md" && !this.isIndexFile(f),
-						)
+					? inbox.children.filter((f): f is TFile => f instanceof TFile && this.isNote(f))
 					: [];
 			if (!notes.length) {
 				new Notice("Inbox is empty.");
@@ -403,7 +449,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 		const progress = new Notice(`Finding a folder for "${note.basename}"…`, 0);
 		try {
-			const body = stripFrontmatter(await this.app.vault.read(note)).trim();
+			const body = this.body(await this.app.vault.read(note));
 			const reply = await chat(
 				this.settings.apiKey,
 				this.settings.model,
@@ -427,12 +473,12 @@ export default class NotesSystemPlugin extends Plugin {
 			for (const child of folder.children) {
 				if (!(child instanceof TFolder) || child.name.startsWith(".")) continue;
 				if (child.path === inbox || child.path.startsWith(`${inbox}/`)) continue;
-				const examples = child.children
-					.filter((f): f is TFile => f instanceof TFile && f.extension === "md" && !this.isIndexFile(f))
-					.map((f) => this.noteEntry(f))
-					.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+				const notes = child.children
+					.filter((f): f is TFile => f instanceof TFile && this.isNote(f))
+					.map((f) => this.noteEntry(f));
+				const examples = sortNotes(notes)
 					.slice(0, EXAMPLES_PER_FOLDER)
-					.map((n) => (n.description ? `${displayTitle(n.basename)} — ${n.description}` : displayTitle(n.basename)));
+					.map((n) => (n.description ? `${n.basename} — ${n.description}` : n.basename));
 				contexts.push({ path: child.path, examples });
 				walk(child);
 			}
@@ -443,7 +489,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 	private async moveNote(note: TFile, folder: string): Promise<void> {
 		await this.ensureFolder(folder);
-		const name = uniqueBasename(note.basename, (n) => this.exists(this.notePath(folder, n)));
+		const name = this.freeName(folder, note.basename);
 		await this.app.fileManager.renameFile(note, this.notePath(folder, name));
 	}
 
@@ -488,7 +534,7 @@ export default class NotesSystemPlugin extends Plugin {
 		for (const child of folder.children) {
 			if (child instanceof TFolder) {
 				if (!child.name.startsWith(".")) node.folders.push(this.folderNode(child));
-			} else if (child instanceof TFile && child.extension === "md" && !this.isIndexFile(child)) {
+			} else if (child instanceof TFile && this.isNote(child)) {
 				node.notes.push(this.noteEntry(child));
 			}
 		}
@@ -496,15 +542,14 @@ export default class NotesSystemPlugin extends Plugin {
 	}
 
 	private noteEntry(file: TFile): NoteEntry {
-		const date = datePrefix(file.basename) ?? undefined;
-		const description = this.app.metadataCache.getFileCache(file)?.frontmatter?.description;
+		const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+		const description = fm?.description;
 		return {
 			linkPath: file.path.replace(/\.md$/, ""),
 			basename: file.basename,
 			folder: this.folderPath(file.parent ?? this.app.vault.getRoot()),
 			description: typeof description === "string" ? description : undefined,
-			sortKey: date ?? formatDate(new Date(file.stat.mtime)),
-			date,
+			...noteDates({ created: fm?.[CREATED], modified: fm?.[MODIFIED], basename: file.basename, mtime: file.stat.mtime }),
 		};
 	}
 
@@ -530,6 +575,21 @@ export default class NotesSystemPlugin extends Plugin {
 
 	private isIndexFile(file: TFile): boolean {
 		return file.basename === this.settings.indexName;
+	}
+
+	private isNote(file: TFile): boolean {
+		return file.extension === "md" && !this.isIndexFile(file);
+	}
+
+	private body(content: string): string {
+		return stripFrontmatter(content).trim();
+	}
+
+	/** A free note name in folder, ignoring case; `self` doesn't count as taken. */
+	private freeName(folder: string, base: string, self?: TFile): string {
+		const parent = folder ? this.app.vault.getAbstractFileByPath(folder) : this.app.vault.getRoot();
+		const names = parent instanceof TFolder ? parent.children.filter((c) => c !== self).map((c) => c.name) : [];
+		return uniqueBasename(base, nameTaken(names));
 	}
 
 	private folderPath(folder: TFolder): string {

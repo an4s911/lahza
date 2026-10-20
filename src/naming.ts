@@ -1,9 +1,10 @@
-// File naming rules. Notes are named "YYYY-MM-DD" (or "YYYY-MM-DD HHmm" for
-// quick captures) until they get a title: "YYYY-MM-DD <title>".
+// File naming rules. New notes are "Untitled" ("Untitled 2", ...) until they
+// get a title, which becomes the whole file name. Dates live in properties.
 
+export const UNTITLED_NAME = "Untitled";
+
+const UNTITLED = /^untitled(?: \d+)?$/i;
 const DATE_PREFIX = /^(\d{4}-\d{2}-\d{2})(?=\s|$)/;
-const UNTITLED = /^\d{4}-\d{2}-\d{2}(?: \d{4})?(?: \d+)?$/;
-const TIME_PART = /^\d{4}$/;
 const ILLEGAL = /[\\/:*?"<>|#^[\]]/g;
 const MAX_TITLE_LENGTH = 60;
 
@@ -13,10 +14,12 @@ export function formatDate(d: Date): string {
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function formatTime(d: Date): string {
-	return `${pad(d.getHours())}${pad(d.getMinutes())}`;
+/** Local time as "YYYY-MM-DDTHH:mm", the format of Obsidian's date & time properties. */
+export function formatDateTime(d: Date): string {
+	return `${formatDate(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** A leading "YYYY-MM-DD" in a file name, e.g. from notes made before dates moved to properties. */
 export function datePrefix(basename: string): string | null {
 	return DATE_PREFIX.exec(basename)?.[1] ?? null;
 }
@@ -41,9 +44,13 @@ export function cleanTitle(raw: string): string {
 	return title;
 }
 
-export function titledBasename(date: string, title: string): string {
-	const clean = cleanTitle(title);
-	return clean ? `${date} ${clean}` : date;
+/**
+ * Tells whether a note name is taken by one of fileNames (names with extension).
+ * Ignores case, since some file systems (iOS, macOS) do.
+ */
+export function nameTaken(fileNames: string[]): (basename: string) => boolean {
+	const taken = new Set(fileNames.map((n) => n.toLowerCase()));
+	return (basename) => taken.has(`${basename}.md`.toLowerCase());
 }
 
 /** Returns base, or "base 2", "base 3"... whichever is free. */
@@ -53,14 +60,4 @@ export function uniqueBasename(base: string, isTaken: (name: string) => boolean)
 		const candidate = `${base} ${i}`;
 		if (!isTaken(candidate)) return candidate;
 	}
-}
-
-/** The human part of a note name, without the date (and capture time). */
-export function displayTitle(basename: string): string {
-	const date = datePrefix(basename);
-	if (!date) return basename;
-	const rest = basename.slice(date.length).trim();
-	const [first, ...others] = rest.split(" ");
-	const withoutTime = first && TIME_PART.test(first) ? others.join(" ") : rest;
-	return withoutTime || date;
 }

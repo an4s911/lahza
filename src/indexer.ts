@@ -1,7 +1,5 @@
 // Renders the generated index.md files. Pure: the plugin builds the tree.
 
-import { displayTitle } from "./naming.ts";
-
 export interface NoteEntry {
 	/** Vault path without the .md extension, used as the link target. */
 	linkPath: string;
@@ -9,11 +7,12 @@ export interface NoteEntry {
 	/** Folder path of the note ("" for the vault root). */
 	folder: string;
 	description?: string;
-	/** "YYYY-MM-DD": the date prefix, or the last modified day for undated notes. */
-	sortKey: string;
-	/** Date shown in the list; only for notes with a date prefix. */
-	date?: string;
+	/** "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm"; sortable as text. */
+	created: string;
+	modified: string;
 }
+
+export type DateKey = "created" | "modified";
 
 export interface FolderNode {
 	/** "" for the vault root. */
@@ -31,10 +30,9 @@ export interface RenderOptions {
 
 export const GENERATED_NOTICE = "> Generated automatically. Edits here will be overwritten.";
 
-export function sortNotes(notes: NoteEntry[]): NoteEntry[] {
-	return [...notes].sort(
-		(a, b) => b.sortKey.localeCompare(a.sortKey) || b.basename.localeCompare(a.basename),
-	);
+/** Newest first by the given date. */
+export function sortNotes(notes: NoteEntry[], key: DateKey = "created"): NoteEntry[] {
+	return [...notes].sort((a, b) => b[key].localeCompare(a[key]) || a.basename.localeCompare(b.basename));
 }
 
 export function countNotes(node: FolderNode): number {
@@ -49,10 +47,8 @@ function escapeLabel(text: string): string {
 	return text.replace(/[|[\]]/g, " ").trim();
 }
 
-function noteLine(note: NoteEntry, showFolder: boolean): string {
-	const label = escapeLabel(displayTitle(note.basename));
-	const parts = [note.date && note.date !== label ? `${note.date} · ` : ""];
-	parts.push(`[[${note.linkPath}|${label}]]`);
+function noteLine(note: NoteEntry, key: DateKey, showFolder: boolean): string {
+	const parts = [`${note[key].slice(0, 10)} · [[${note.linkPath}|${escapeLabel(note.basename)}]]`];
 	if (note.description) parts.push(` — ${note.description.replace(/\s+/g, " ").trim()}`);
 	if (showFolder && note.folder) parts.push(` *(${note.folder})*`);
 	return `- ${parts.join("")}`;
@@ -68,9 +64,9 @@ export function renderIndex(node: FolderNode, options: RenderOptions): string {
 	const lines = [`# ${isRoot ? options.rootTitle : node.name}`, "", GENERATED_NOTICE, ""];
 
 	if (isRoot) {
-		const recent = sortNotes(allNotes(node)).slice(0, options.recentCount);
+		const recent = sortNotes(allNotes(node), "modified").slice(0, options.recentCount);
 		if (recent.length) {
-			lines.push("## Recent", "", ...recent.map((n) => noteLine(n, true)), "");
+			lines.push("## Recently edited", "", ...recent.map((n) => noteLine(n, "modified", true)), "");
 		}
 	}
 
@@ -81,7 +77,7 @@ export function renderIndex(node: FolderNode, options: RenderOptions): string {
 
 	const notes = sortNotes(node.notes);
 	if (notes.length) {
-		lines.push("## Notes", "", ...notes.map((n) => noteLine(n, false)), "");
+		lines.push("## Notes", "", ...notes.map((n) => noteLine(n, "created", false)), "");
 	}
 
 	if (!folders.length && !notes.length) lines.push("*No notes yet.*", "");
