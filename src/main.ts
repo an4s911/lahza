@@ -1,4 +1,4 @@
-import { Notice, Plugin, TAbstractFile, TFile, TFolder } from "obsidian";
+import { Notice, Platform, Plugin, TAbstractFile, TFile, TFolder, setIcon } from "obsidian";
 import { describeDecision, stripFrontmatter } from "./content.ts";
 import { type FolderNode, type NoteEntry, renderIndex } from "./indexer.ts";
 import { askFileChoice, askNewNoteFolder, confirmNewFolder, type FileChoice, pickFolder } from "./modals.ts";
@@ -29,6 +29,7 @@ const MAX_NOTE_CHARS = 6000;
 const CHANGE_RATIO = 0.3;
 const RECENT_COUNT = 10;
 const EXAMPLES_PER_FOLDER = 5;
+const EMPTY_TAB_ACTION = "notes-system-new-note";
 
 interface PluginData {
 	settings?: Partial<NotesSettings>;
@@ -124,7 +125,9 @@ export default class NotesSystemPlugin extends Plugin {
 				}),
 			);
 			this.registerEvent(this.app.metadataCache.on("changed", (f) => this.onVaultChange(f)));
+			this.registerEvent(this.app.workspace.on("layout-change", () => this.decorateEmptyTabs()));
 
+			this.decorateEmptyTabs();
 			this.scheduleIndexRebuild();
 		});
 	}
@@ -132,6 +135,7 @@ export default class NotesSystemPlugin extends Plugin {
 	onunload(): void {
 		window.clearTimeout(this.indexTimer);
 		this.unmapVimEscape();
+		document.querySelectorAll(`.${EMPTY_TAB_ACTION}`).forEach((el) => el.remove());
 	}
 
 	async loadSettings(): Promise<void> {
@@ -171,6 +175,38 @@ export default class NotesSystemPlugin extends Plugin {
 	}
 
 	// ---- Creating notes --------------------------------------------------
+
+	/** Adds "New dated note" to the top of the actions on every empty (new) tab. */
+	private decorateEmptyTabs(): void {
+		// The empty view fills its action list when it opens, so wait a tick.
+		window.setTimeout(() => {
+			for (const leaf of this.app.workspace.getLeavesOfType("empty")) {
+				const list = (leaf.view as any).actionListEl as HTMLElement | undefined;
+				if (!list || list.querySelector(`.${EMPTY_TAB_ACTION}`)) continue;
+
+				// Same markup as Obsidian's own empty-tab actions.
+				const button = createDiv({
+					cls: ["text-icon-button", "tappable", "mod-pill", "empty-state-action", EMPTY_TAB_ACTION],
+					attr: { tabIndex: 0, role: "button" },
+				});
+				setIcon(button.createSpan("text-button-icon"), "calendar-plus");
+				button.createSpan({ cls: "text-button-label", text: "New dated note" });
+				const hotkey = Platform.isDesktop
+					? (this.app as any).hotkeyManager?.printHotkeyForCommand?.(`${this.manifest.id}:new-note-here`)
+					: "";
+				if (hotkey) button.createSpan({ cls: "empty-state-hotkey", text: ` ${hotkey}` });
+
+				button.addEventListener("click", () => this.newNoteWithPicker());
+				button.addEventListener("keydown", (e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						void this.newNoteWithPicker();
+					}
+				});
+				list.prepend(button);
+			}
+		}, 0);
+	}
 
 	private async newNoteWithPicker(): Promise<void> {
 		const parent = this.app.workspace.getActiveFile()?.parent;
