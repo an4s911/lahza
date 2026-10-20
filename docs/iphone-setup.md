@@ -6,14 +6,19 @@ Replace `<your-username>` and `<your-vault-repo>` with your own values.
 
 ## 1. Create an access token
 
-Mobile git can't use SSH, so it needs a token over HTTPS.
+Mobile git can't use SSH, so it needs a token over HTTPS. Use a **fine-grained** token limited to the vault repo, so a lost phone can't reach your other projects.
 
-1. On gitlab.com open your user settings → **Personal access tokens** (<https://gitlab.com/-/user_settings/personal_access_tokens>) → **Add new token**.
-2. Name it e.g. `obsidian-iphone` and set an expiry date (you'll renew it when it runs out).
-3. Scopes: `read_repository` and `write_repository` only.
-4. Create it and copy the token. You'll only see it once.
+1. On gitlab.com select your **avatar** (upper-right) → **Edit profile**.
+2. In the left sidebar select **Access** → **Personal access tokens**.
+3. From the **Generate token** dropdown select **Fine-grained token**.
+4. **Name**: e.g. `obsidian-iphone`. **Description**: optional.
+5. **Expiration date**: up to 365 days (blank means 365). Set a reminder to renew it; sync stops when it expires.
+6. **Group and project access**: limit it to specific projects and select `<your-vault-repo>`.
+7. **Add resource permissions**, **Group and project** tab: select the **Code** resource, then tick **Download** (clone/pull) and **Push**. Nothing else is needed.
+8. Add all permissions before generating; plan on making a new token rather than editing this one.
+9. Select **Generate token** and copy it right away. It's shown only once.
 
-Note: a personal access token works for every repo your account can access, not only the vault. Keep the scopes minimal and the expiry short. If your GitLab plan offers project access tokens, a token on just the vault project is narrower.
+If fine-grained tokens aren't available to you, choose **Legacy token** instead with only the `read_repository` and `write_repository` scopes and a short expiry. Note that a legacy token works for every repo your account can access.
 
 ## 2. Install and clone
 
@@ -21,7 +26,7 @@ Note: a personal access token works for every repo your account can access, not 
 2. Create a new, empty vault (any name, e.g. the repo name). Don't use iCloud for it.
 3. **Settings → Community plugins → Turn on community plugins → Browse**, install **Git** (by Vinzent) and enable it.
 4. In the Git plugin settings, under **Authentication/commit author**, set:
-   - Username: `<your-username>`
+   - Username: `<your-username>` (GitLab doesn't check it over HTTPS, but use your real one)
    - Password/personal access token: the token from step 1
    - Author name and email for commits
 5. Open the command palette (swipe down) → **Git: Clone an existing remote repo**.
