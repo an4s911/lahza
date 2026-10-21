@@ -24,7 +24,7 @@ const MAX_NOTE_CHARS = 6000;
 const CHANGE_RATIO = 0.3;
 const RECENT_COUNT = 10;
 const EXAMPLES_PER_FOLDER = 5;
-const EMPTY_TAB_ACTION = "notes-system-new-note";
+const EMPTY_TAB_ACTION = "lahza-new-note";
 
 interface PluginData {
 	settings?: Partial<NotesSettings>;
@@ -374,7 +374,7 @@ export default class NotesSystemPlugin extends Plugin {
 		if (!this.settings.apiKey) {
 			if (!quiet || !this.warnedNoKey) {
 				this.warnedNoKey = true;
-				new Notice("Notes System: add your OpenRouter API key in settings to get titles.");
+				new Notice("Lahza: add your OpenRouter API key in settings to get titles.");
 			}
 			return file;
 		}
@@ -635,7 +635,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 	private reportError(error: unknown): void {
 		const message = error instanceof Error ? error.message : String(error);
-		console.error("Notes System:", error);
-		new Notice(`Notes System: ${message}`);
+		console.error("Lahza:", error);
+		new Notice(`Lahza: ${message}`);
 	}
 }

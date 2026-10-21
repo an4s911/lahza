@@ -11,7 +11,7 @@ export async function chat(
 	messages: ChatMessage[],
 	maxTokens: number,
 ): Promise<string> {
-	if (!apiKey) throw new AiError("Add your OpenRouter API key in the Notes System settings.");
+	if (!apiKey) throw new AiError("Add your OpenRouter API key in the Lahza settings.");
 
 	const response = await requestUrl({
 		url: ENDPOINT,
@@ -20,7 +20,7 @@ export async function chat(
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
 			"Content-Type": "application/json",
-			"X-Title": "Notes System for Obsidian",
+			"X-Title": "Lahza for Obsidian",
 		},
 		body: JSON.stringify({
 			model,

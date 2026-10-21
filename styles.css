@@ -1,25 +1,25 @@
 /* In-note math */
-.ns-calc-var {
+.lahza-calc-var {
 	color: var(--text-accent);
 }
 
-.ns-calc-result {
+.lahza-calc-result {
 	color: var(--color-green);
 	font-weight: var(--font-semibold);
 }
 
-.ns-calc-ghost {
+.lahza-calc-ghost {
 	color: var(--text-faint);
 	pointer-events: none;
 }
 
-.ns-calc-error {
+.lahza-calc-error {
 	text-decoration: underline wavy var(--text-error);
 	text-decoration-skip-ink: none;
 	text-underline-offset: 3px;
 }
 
-body .cm-tooltip.ns-calc-tooltip-box {
+body .cm-tooltip.lahza-calc-tooltip-box {
 	background-color: var(--background-secondary);
 	color: var(--text-normal);
 	border: 1px solid var(--background-modifier-border-hover);
@@ -27,7 +27,7 @@ body .cm-tooltip.ns-calc-tooltip-box {
 	box-shadow: var(--shadow-s);
 }
 
-.ns-calc-tooltip {
+.lahza-calc-tooltip {
 	padding: var(--size-4-1) var(--size-4-2);
 	font-family: var(--font-interface);
 	font-size: var(--font-ui-small);

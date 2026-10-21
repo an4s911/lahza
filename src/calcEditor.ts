@@ -44,7 +44,7 @@ class GhostWidget extends WidgetType {
 
 	toDOM(): HTMLElement {
 		const el = document.createElement("span");
-		el.className = "ns-calc-ghost";
+		el.className = "lahza-calc-ghost";
 		el.textContent = this.text;
 		el.setAttribute("aria-label", "Enter or Tab to insert");
 		return el;
@@ -56,9 +56,9 @@ class GhostWidget extends WidgetType {
 }
 
 const mark = (cls: string) => Decoration.mark({ class: cls });
-const VAR = mark("ns-calc-var");
-const RESULT = mark("ns-calc-result");
-const ERROR = mark("ns-calc-error");
+const VAR = mark("lahza-calc-var");
+const RESULT = mark("lahza-calc-result");
+const ERROR = mark("lahza-calc-error");
 
 function decorations(insert: () => boolean) {
 	return EditorView.decorations.compute([calcField, "selection"], (state) => {
@@ -152,10 +152,10 @@ function describeAt(calc: NoteCalc, pos: number, inclusive: boolean): { span: Sp
 
 function tooltipView(lines: string[]): TooltipView {
 	const dom = document.createElement("div");
-	dom.className = "ns-calc-tooltip";
+	dom.className = "lahza-calc-tooltip";
 	for (const line of lines) dom.createDiv({ text: line });
 	// CodeMirror's tooltip box defaults to a light background; mark it so styles.css can theme it.
-	return { dom, mount: () => dom.closest(".cm-tooltip")?.classList.add("ns-calc-tooltip-box") };
+	return { dom, mount: () => dom.closest(".cm-tooltip")?.classList.add("lahza-calc-tooltip-box") };
 }
 
 const hover = hoverTooltip((view, pos) => {

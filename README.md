@@ -1,6 +1,6 @@
 <img src="assets/icon.svg" width="64" height="64" alt="">
 
-# Notes System
+# Lahza
 
 A small Obsidian plugin for a simple notes workflow: plain markdown notes in folders, with created/modified dates as properties and a cheap AI model doing the boring parts.
 
@@ -65,6 +65,6 @@ npm run dev       # rebuild on change
 OBSIDIAN_VAULT=/path/to/vault npm run deploy   # copy the build into a vault
 ```
 
-Then enable **Notes System** under Settings → Community plugins.
+Then enable **Lahza** under Settings → Community plugins.
 
 Syncing a vault to an iPhone with git is covered in [docs/iphone-setup.md](docs/iphone-setup.md).

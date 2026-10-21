@@ -44,11 +44,11 @@ In the Git plugin settings:
 - **Auto commit-and-sync interval**: e.g. `5` minutes.
 - Run **Git: Commit-and-sync** from the command palette any time you want to sync right away, e.g. before closing the app.
 
-## 4. Notes System plugin
+## 4. Lahza plugin
 
 The plugin files come with the vault, but its settings don't sync (they hold the API key):
 
-1. **Settings → Community plugins** → make sure **Notes System** is enabled.
+1. **Settings → Community plugins** → make sure **Lahza** is enabled.
 2. Open its settings and paste your OpenRouter API key.
 
 ## Tips
