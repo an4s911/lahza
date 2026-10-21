@@ -19,7 +19,7 @@ It works on desktop and mobile. The AI features need an [OpenRouter](https://ope
 
 Lahza isn't in Obsidian's community plugin list yet, so install it by hand:
 
-1. Get `main.js`, `manifest.json` and `styles.css`, either by building the plugin (see [Development](#development)) or from a release.
+1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/an4s911/lahza/releases/latest), or build them yourself (see [Development](#development)).
 2. Copy them into `<your vault>/.obsidian/plugins/lahza/`.
 3. Restart Obsidian, then enable **Lahza** under **Settings → Community plugins**.
 4. For the AI features, paste an OpenRouter API key in the plugin's settings.
