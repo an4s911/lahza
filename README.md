@@ -116,3 +116,7 @@ The code lives in `src/`. Modules that don't import `obsidian` (`calc`, `calcNot
 ## License
 
 [MIT](LICENSE)
+
+## Disclaimer
+
+This plugin is vibe coded: it was written mostly by an AI coding assistant, with a human deciding what to build and testing it in daily use. It works, and it has tests, but read the code before you rely on it, and keep backups of your notes.

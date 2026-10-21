@@ -2,8 +2,9 @@
   "id": "lahza",
   "name": "Lahza",
   "version": "0.3.0",
-  "minAppVersion": "1.5.0",
+  "minAppVersion": "1.4.4",
   "description": "Notes with created/modified dates, quick capture to an inbox, AI titles and descriptions, inbox filing suggestions, per-folder indexes and in-note math with variables.",
-  "author": "",
+  "author": "Anas Bashir",
+  "authorUrl": "https://anasbashir.com",
   "isDesktopOnly": false
 }
