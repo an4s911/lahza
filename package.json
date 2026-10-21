@@ -1,6 +1,6 @@
 {
   "name": "lahza",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Obsidian plugin: notes with created/modified dates, AI titles and inbox filing, folder indexes and in-note math.",
   "author": "Anas Bashir (https://anasbashir.com)",
   "private": true,
