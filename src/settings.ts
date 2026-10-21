@@ -1,7 +1,7 @@
 import { type App, PluginSettingTab, Setting } from "obsidian";
-import type NotesSystemPlugin from "./main.ts";
+import type LahzaPlugin from "./main.ts";
 
-export interface NotesSettings {
+export interface LahzaSettings {
 	apiKey: string;
 	model: string;
 	inboxFolder: string;
@@ -14,7 +14,7 @@ export interface NotesSettings {
 
 export type MathResults = "suggest" | "insert" | "off";
 
-export const DEFAULT_SETTINGS: NotesSettings = {
+export const DEFAULT_SETTINGS: LahzaSettings = {
 	apiKey: "",
 	model: "mistralai/mistral-small-3.2-24b-instruct",
 	inboxFolder: "inbox",
@@ -25,10 +25,10 @@ export const DEFAULT_SETTINGS: NotesSettings = {
 	mathResults: "suggest",
 };
 
-export class NotesSettingTab extends PluginSettingTab {
-	plugin: NotesSystemPlugin;
+export class LahzaSettingTab extends PluginSettingTab {
+	plugin: LahzaPlugin;
 
-	constructor(app: App, plugin: NotesSystemPlugin) {
+	constructor(app: App, plugin: LahzaPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

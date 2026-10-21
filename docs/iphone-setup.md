@@ -1,6 +1,6 @@
 # iPhone setup (git sync)
 
-This connects Obsidian on an iPhone to a vault stored in a private GitLab repo, using the community **Git** plugin (Obsidian Git). It syncs when you open the app and while it's open; iOS doesn't allow background sync.
+This connects Obsidian on an iPhone to a vault stored in a private GitLab repo, using the community **Git** plugin (Obsidian Git), so the phone gets your notes and the [Lahza](../README.md) plugin. It syncs when you open the app and while it's open; iOS doesn't allow background sync.
 
 Replace `<your-username>` and `<your-vault-repo>` with your own values.
 
@@ -46,7 +46,7 @@ In the Git plugin settings:
 
 ## 4. Lahza plugin
 
-The plugin files come with the vault, but its settings don't sync (they hold the API key):
+The plugin files come with the vault if you committed them (see [Install](../README.md#install)), but its settings don't sync because they hold the API key:
 
 1. **Settings → Community plugins** → make sure **Lahza** is enabled.
 2. Open its settings and paste your OpenRouter API key.
@@ -55,4 +55,4 @@ The plugin files come with the vault, but its settings don't sync (they hold the
 
 - Avoid editing the same note on the laptop and the phone at the same time; sync first.
 - If a pull reports a conflict, open **Git: Open source control view** to see which file, fix it, then commit-and-sync.
-- Editor settings such as vim mode live in `.obsidian/app.json`. Keep that file out of git (see the README's `.gitignore`) so the desktop can use vim mode while the phone doesn't.
+- Editor settings such as vim mode live in `.obsidian/app.json`. Keep that file out of git (see [Syncing with git](../README.md#syncing-with-git) in the README) so the desktop can use vim mode while the phone doesn't.

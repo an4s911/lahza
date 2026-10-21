@@ -1,7 +1,7 @@
 {
   "name": "lahza",
   "version": "0.3.0",
-  "description": "Minimal Obsidian notes workflow: dated notes, inbox filing, auto titles and folder indexes.",
+  "description": "Obsidian plugin: notes with created/modified dates, AI titles and inbox filing, folder indexes and in-note math.",
   "private": true,
   "type": "module",
   "scripts": {

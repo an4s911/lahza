@@ -16,7 +16,7 @@ import {
 	parseDescribe,
 	parseFile,
 } from "./prompts.ts";
-import { DEFAULT_SETTINGS, type NotesSettings, NotesSettingTab } from "./settings.ts";
+import { DEFAULT_SETTINGS, type LahzaSettings, LahzaSettingTab } from "./settings.ts";
 
 const LEAVE_DELAY_MS = 2000;
 const INDEX_DELAY_MS = 1500;
@@ -27,13 +27,13 @@ const EXAMPLES_PER_FOLDER = 5;
 const EMPTY_TAB_ACTION = "lahza-new-note";
 
 interface PluginData {
-	settings?: Partial<NotesSettings>;
+	settings?: Partial<LahzaSettings>;
 	/** Body length per note path when it was last described on this device. */
 	described?: Record<string, number>;
 }
 
-export default class NotesSystemPlugin extends Plugin {
-	settings: NotesSettings = { ...DEFAULT_SETTINGS };
+export default class LahzaPlugin extends Plugin {
+	settings: LahzaSettings = { ...DEFAULT_SETTINGS };
 	private described: Record<string, number> = {};
 	private currentPath: string | null = null;
 	/** Note body when it was opened, to tell whether it changed by the time it's left. */
@@ -50,7 +50,7 @@ export default class NotesSystemPlugin extends Plugin {
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
-		this.addSettingTab(new NotesSettingTab(this.app, this));
+		this.addSettingTab(new LahzaSettingTab(this.app, this));
 		this.registerEditorExtension(this.mathExtensions);
 		this.applyMathResults();
 
