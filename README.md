@@ -1,5 +1,3 @@
-<img src="assets/icon.svg" width="64" height="64" alt="">
-
 # Lahza
 
 An Obsidian plugin for a simple notes workflow: plain markdown notes in folders, created and modified dates kept as properties, math that works itself out as you type, and a cheap AI model that writes titles and descriptions and helps you sort an inbox.
