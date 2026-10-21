@@ -114,3 +114,7 @@ OBSIDIAN_VAULT=/path/to/vault npm run deploy   # copy the build into a vault
 After deploying, reload the plugin (turn it off and on under Community plugins) to pick up the new build.
 
 The code lives in `src/`. Modules that don't import `obsidian` (`calc`, `calcNote`, `dates`, `naming`, `indexer`, `folders`, `content`, `prompts`) are pure and have tests in `test/`.
+
+## License
+
+[MIT](LICENSE)
