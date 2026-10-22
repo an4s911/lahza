@@ -82,6 +82,18 @@ export default class LahzaPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
+			id: "retitle-note",
+			name: "Retitle current note with AI",
+			checkCallback: (checking) => {
+				const file = this.app.workspace.getActiveFile();
+				if (!file || file.extension !== "md" || this.isIndexFile(file)) return false;
+				if (!checking) {
+					this.describe(file, true, false, true).catch((e) => this.reportError(e));
+				}
+				return true;
+			},
+		});
+		this.addCommand({
 			id: "rebuild-indexes",
 			name: "Rebuild folder indexes",
 			callback: () => this.rebuildIndexes(),
@@ -340,8 +352,11 @@ export default class LahzaPlugin extends Plugin {
 		}, LEAVE_DELAY_MS);
 	}
 
-	/** Adds a description and, for Untitled notes, a title. Returns the (possibly renamed) file. */
-	private async describe(file: TFile, force: boolean, quiet: boolean): Promise<TFile> {
+	/**
+	 * Adds a description and, for Untitled notes (or any note when `retitle` is set),
+	 * a title. Returns the (possibly renamed) file.
+	 */
+	private async describe(file: TFile, force: boolean, quiet: boolean, retitle = false): Promise<TFile> {
 		if (!this.isNote(file) || this.inFlight.has(file.path)) {
 			return file;
 		}
@@ -396,9 +411,12 @@ export default class LahzaPlugin extends Plugin {
 				});
 			}
 			this.described[file.path] = body.length;
-			if (untitled && result.title) await this.renameWithTitle(file, result.title);
+			const oldName = file.basename;
+			if ((untitled || retitle) && result.title) await this.renameWithTitle(file, result.title);
 			await this.saveSettings();
-			if (!quiet) new Notice(`Described "${file.basename}".`);
+			if (retitle) {
+				new Notice(file.basename === oldName ? `Kept the title "${oldName}".` : `Retitled to "${file.basename}".`);
+			} else if (!quiet) new Notice(`Described "${file.basename}".`);
 			return file;
 		} finally {
 			this.inFlight.delete(file.path);

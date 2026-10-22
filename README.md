@@ -34,6 +34,7 @@ If your vault syncs with git, commit the plugin folder (but not `data.json`, see
 | Quick capture to inbox | Create an Untitled note in the inbox. Also a ribbon button. |
 | File inbox notes | Go through the inbox with AI folder suggestions. Also a ribbon button. |
 | Title and describe current note | Ask the model now, even if the note hasn't changed. |
+| Retitle current note with AI | Rename the note to the model's title even if you named it yourself, and refresh its description. |
 | Rebuild folder indexes | Regenerate every `index.md`. |
 
 The plugin doesn't set any hotkeys. Bind the ones you use under **Settings → Hotkeys**, for example "New note (choose folder)" to Ctrl/Cmd+N (unbind Obsidian's own "Create new note" first).
