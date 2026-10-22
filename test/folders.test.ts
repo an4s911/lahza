@@ -21,6 +21,12 @@ test("offers to create a folder that doesn't exist", () => {
 	assert.deepEqual(names("work"), ["work", "work/client"]);
 });
 
+test("a trailing slash keeps the folder itself", () => {
+	assert.deepEqual(names("work/"), ["work", "work/client"]);
+	assert.deepEqual(names("work/client/"), ["work/client"]);
+	assert.deepEqual(names("work/new"), ["+work/new"]);
+});
+
 test("lists a missing inbox as one to create", () => {
 	assert.deepEqual(
 		folderOptions(["work"], "inbox", null, "").map((o) => [o.folder, o.create]),

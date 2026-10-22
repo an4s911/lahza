@@ -20,7 +20,16 @@ class NewNoteFolderModal extends SuggestModal<FolderOption> {
 		this.inbox = inbox;
 		this.current = current;
 		this.resolve = resolve;
-		this.setPlaceholder("New note in… (Enter for inbox, or type a new folder path)");
+		this.setPlaceholder("New note in… (Enter for inbox, Tab to complete, or type a new folder path)");
+		// Tab fills the input with the highlighted folder so a subfolder can be typed after it.
+		this.scope.register([], "Tab", () => {
+			const option = (this as unknown as { chooser: { getSelectedValue(): FolderOption | null } }).chooser.getSelectedValue();
+			if (option) {
+				this.inputEl.value = `${option.folder}/`;
+				this.inputEl.dispatchEvent(new Event("input"));
+			}
+			return false;
+		});
 	}
 
 	getSuggestions(query: string): FolderOption[] {

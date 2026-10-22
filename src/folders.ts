@@ -10,7 +10,8 @@ export interface FolderOption {
 
 /**
  * Inbox first (the default on Enter), then the current folder, then the rest.
- * A query that isn't an existing folder can be created as a new one.
+ * A query that isn't an existing folder can be created as a new one. A query
+ * like "work/" (left by Tab completion) still lists "work" itself.
  */
 export function folderOptions(
 	folders: string[],
@@ -19,16 +20,16 @@ export function folderOptions(
 	query: string,
 ): FolderOption[] {
 	const q = query.trim().toLowerCase();
+	const typed = cleanFolderPath(query);
 	const ordered = [inbox, ...(current && current !== inbox ? [current] : [])];
 	for (const folder of [...folders].sort((a, b) => a.localeCompare(b))) {
 		if (!ordered.includes(folder)) ordered.push(folder);
 	}
 
 	const options: FolderOption[] = ordered
-		.filter((folder) => !q || folder.toLowerCase().includes(q))
+		.filter((folder) => !q || folder.toLowerCase().includes(q) || folder.toLowerCase() === typed.toLowerCase())
 		.map((folder) => ({ folder, create: !folders.includes(folder) }));
 
-	const typed = cleanFolderPath(query);
 	if (typed && !ordered.some((folder) => folder.toLowerCase() === typed.toLowerCase())) {
 		options.push({ folder: typed, create: true });
 	}
