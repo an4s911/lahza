@@ -1,4 +1,4 @@
-// Options for the "New note" folder picker. Pure.
+// Options for the "New Lahza note" folder picker. Pure.
 
 import { cleanFolderPath } from "./prompts.ts";
 

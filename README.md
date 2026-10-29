@@ -6,7 +6,7 @@ It works on desktop and mobile. The AI features need an [OpenRouter](https://ope
 
 ## What it does
 
-- **New notes.** "New note (choose folder)" asks where the note goes (Enter picks the inbox; Tab fills in the highlighted folder so you can keep typing a subfolder; type a path to make a new folder) and creates `Untitled.md` there (`Untitled 2.md` if that's taken). Also on the new tab page and in a folder's right-click menu.
+- **New Lahza note.** "New Lahza note (choose folder)" asks where the note goes (Enter picks the inbox; Tab fills in the highlighted folder so you can keep typing a subfolder; type a path to make a new folder) and creates `Untitled.md` there (`Untitled 2.md` if that's taken). Also on the new tab page and in a folder's right-click menu.
 - **Quick capture.** "Quick capture to inbox" creates an Untitled note in the inbox for a thought you'll sort later. Also on the ribbon, so it works on mobile.
 - **Created and modified dates.** New notes get `created` and `modified` date & time properties (local time, `YYYY-MM-DDTHH:mm`). When you leave a note whose text changed, `modified` is set to now. They're properties rather than file times because git resets file times on every clone and pull.
 - **Automatic title and description.** When you leave a note, the plugin asks the model for a short title and a one-line description. The description goes into the note's `description` property and an Untitled note is renamed to the title. Names you chose yourself are never changed, and the model never edits your text. It only asks again when the note changed a lot.
@@ -30,14 +30,14 @@ If your vault syncs with git, commit the plugin folder (but not `data.json`, see
 
 | Command | What it does |
 | --- | --- |
-| New note (choose folder) | Pick a folder (Enter for the inbox) and create an Untitled note there. |
+| New Lahza note (choose folder) | Pick a folder (Enter for the inbox) and create an Untitled note there. |
 | Quick capture to inbox | Create an Untitled note in the inbox. Also a ribbon button. |
 | File inbox notes | Go through the inbox with AI folder suggestions. Also a ribbon button. |
 | Title and describe current note | Ask the model now, even if the note hasn't changed. |
 | Retitle current note with AI | Rename the note to the model's title even if you named it yourself, and refresh its description. |
 | Rebuild folder indexes | Regenerate every `index.md`. |
 
-The plugin doesn't set any hotkeys. Bind the ones you use under **Settings → Hotkeys**, for example "New note (choose folder)" to Ctrl/Cmd+N (unbind Obsidian's own "Create new note" first).
+The plugin doesn't set any hotkeys. Bind the ones you use under **Settings → Hotkeys**, for example "New Lahza note (choose folder)" to Ctrl/Cmd+N (unbind Obsidian's own "Create new note" first).
 
 ## Settings
 
@@ -47,7 +47,7 @@ The plugin doesn't set any hotkeys. Bind the ones you use under **Settings → H
 | Model | `mistralai/mistral-small-3.2-24b-instruct` | Any OpenRouter model ID. |
 | Auto title and description | on | Ask the model when you leave a note. |
 | Minimum note length | 80 | Shorter notes are left alone. |
-| Inbox folder | `inbox` | Where quick captures and the default new note go. |
+| Inbox folder | `inbox` | Where quick captures and the default new Lahza note go. |
 | Index file name | `index` | Name of the generated index in every folder. |
 | Vim escape sequences | `jk, kj` | Empty to turn off. |
 | Math results | Suggest | Suggest, Insert (add answers right away) or Off. |

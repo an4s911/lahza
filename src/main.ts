@@ -56,7 +56,7 @@ export default class LahzaPlugin extends Plugin {
 
 		this.addCommand({
 			id: "new-note-here",
-			name: "New note (choose folder)",
+			name: "New Lahza note (choose folder)",
 			callback: () => this.newNoteWithPicker(),
 		});
 		this.addCommand({
@@ -107,7 +107,7 @@ export default class LahzaPlugin extends Plugin {
 				if (!(file instanceof TFolder)) return;
 				menu.addItem((item) =>
 					item
-						.setTitle("New note")
+						.setTitle("New Lahza note")
 						.setIcon("file-plus")
 						.onClick(() => this.newNoteIn(file)),
 				);
@@ -224,7 +224,7 @@ export default class LahzaPlugin extends Plugin {
 
 	// ---- Creating notes --------------------------------------------------
 
-	/** Adds "New note" to the top of the actions on every empty (new) tab. */
+	/** Adds "New Lahza note" to the top of the actions on every empty (new) tab. */
 	private decorateEmptyTabs(): void {
 		// The empty view fills its action list when it opens, so wait a tick.
 		window.setTimeout(() => {
@@ -238,7 +238,7 @@ export default class LahzaPlugin extends Plugin {
 					attr: { tabIndex: 0, role: "button" },
 				});
 				setIcon(button.createSpan("text-button-icon"), "file-plus");
-				button.createSpan({ cls: "text-button-label", text: "New note" });
+				button.createSpan({ cls: "text-button-label", text: "New Lahza note" });
 				const hotkey = Platform.isDesktop
 					? (this.app as any).hotkeyManager?.printHotkeyForCommand?.(`${this.manifest.id}:new-note-here`)
 					: "";
