@@ -47,8 +47,20 @@ function escapeLabel(text: string): string {
 	return text.replace(/[|[\]]/g, " ").trim();
 }
 
+function formatIndexDate(value: string): string {
+	const calendarDate = value.slice(0, 10);
+	// Use UTC throughout so the stored calendar date keeps its weekday in every timezone.
+	const date = new Date(`${calendarDate}T00:00:00Z`);
+	if (Number.isNaN(date.getTime())) return calendarDate;
+	const day = date.getUTCDate();
+	const suffix = day >= 11 && day <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[day % 10] ?? "th");
+	const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][date.getUTCMonth()];
+	const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getUTCDay()];
+	return `${day}${suffix} ${month}, ${date.getUTCFullYear()} - ${weekday}`;
+}
+
 function noteLine(note: NoteEntry, key: DateKey, showFolder: boolean): string {
-	const parts = [`${note[key].slice(0, 10)} · [[${note.linkPath}|${escapeLabel(note.basename)}]]`];
+	const parts = [`${formatIndexDate(note[key])} · [[${note.linkPath}|${escapeLabel(note.basename)}]]`];
 	if (note.description) parts.push(` — ${note.description.replace(/\s+/g, " ").trim()}`);
 	if (showFolder && note.folder) parts.push(` *(${note.folder})*`);
 	return `- ${parts.join("")}`;
